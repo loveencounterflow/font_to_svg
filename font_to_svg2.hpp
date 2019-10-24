@@ -5,15 +5,15 @@
 // see https://github.com/donbright/font_to_svg/pull/3
 
 /*
- 
+
  This software is provided 'as-is', without any express or implied
  warranty.  In no event will the authors be held liable for any damages
  arising from the use of this software.
- 
+
  Permission is granted to anyone to use this software for any purpose,
  including commercial applications, and to alter it and redistribute it
  freely, subject to the following restrictions:
- 
+
  1. The origin of this software must not be misrepresented; you must not
  claim that you wrote the original software. If you use this software
  in a product, an acknowledgment in the product documentation would be
@@ -21,14 +21,14 @@
  2. Altered source versions must be plainly marked as such, and must not be
  misrepresented as being the original software.
  3. This notice may not be removed or altered from any source distribution.
- 
+
  License based on zlib license, by Jean-loup Gailly and Mark Adler
  */
 
 /*
- 
+
  This program reads a TTF (TrueType (R)) file and outputs an SVG path.
- 
+
  See these sites for more info.
  Basic Terms: http://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
  FType + outlines: http://www.freetype.org/freetype2/docs/reference/ft2-outline_processinhtml
@@ -38,10 +38,10 @@
  Non-zero winding rule: http://en.wikipedia.org/wiki/Nonzero-rule
  SVG paths: http://www.w3schools.com/svg/svg_path.asp
  SVG paths + nonzero: http://www.w3.org/TR/SVG/paintinhtml#FillProperties
- 
+
  TrueType is a trademark of Apple Inc. Use of this mark does not imply
  endorsement.
- 
+
  */
 
 #ifndef __font_to_svg_h__
@@ -57,9 +57,9 @@
 #include <string>
 
 namespace LatexDrawGraphics {
-    
+
     std::stringstream debug;
-        
+
     class CFreeType
     {
     public:
@@ -67,18 +67,18 @@ namespace LatexDrawGraphics {
         FT_Library library;
         FT_Face face;
         FT_Error error;
-        
+
         CFreeType()
         {
             filename = std::string("");
         }
-        
+
         CFreeType( std::string fname )
         {
             filename = fname;
             error = FT_Init_FreeType( &library );
             debug << "Init error code: " << error;
-            
+
             // Load a typeface
             error = FT_New_Face( library, filename.c_str(), 0, &face );
             debug << "\nFace load error code: " << error;
@@ -92,7 +92,7 @@ namespace LatexDrawGraphics {
             debug << "\nNumber of faces: " << face->num_faces;
             debug << "\nNumber of glyphs: " << face->num_glyphs;
         }
-        
+
         void free()
         {
             debug << "\n<!--";
@@ -102,11 +102,11 @@ namespace LatexDrawGraphics {
             debug << "\nFree library. error code: " << error;
             debug << "\n-->\n";
         }
-        
+
     };
-    
-    
-    
+
+
+
     class CFreeGlypth
     {
     public:
@@ -117,53 +117,53 @@ namespace LatexDrawGraphics {
         FT_Glyph_Metrics _gm;
         FT_Face _face;
         CFreeType _file;
-        
+
         FT_Vector* _points;
         char* _tags;
         short* _contours;
-        
+
         long _bbwidth, _bbheight;
-        
+
         CFreeGlypth( CFreeType &f, std::string unicode_str )
         {
             _file = f;
             init( unicode_str );
         }
-        
+
         CFreeGlypth( const char * filename, std::string unicode_str )
         {
             _file = CFreeType( std::string(filename) );
             init( unicode_str );
         }
-        
+
         CFreeGlypth( const char * filename, const char * unicode_c_str )
         {
             _file = CFreeType( std::string(filename) );
             init( std::string(unicode_c_str) );
         }
-        
+
         void free()
         {
             _file.free();
         }
-        
+
         void init( std::string unicode_s )
         {
             _face = _file.face;
             _codepoint = unicode_s.c_str()[0];
-            
+
             // Load the Glyph into the face's Glyph Slot + print details
             FT_UInt glyph_index = FT_Get_Char_Index( _face, _codepoint );
             debug << "<!--\nUnicode requested: " << unicode_s;
             debug << " (decimal: " << _codepoint << " hex: 0x"
             << std::hex << _codepoint << std::dec << ")";
-            
+
             debug << "\nGlyph index for unicode: " << glyph_index;
             _error = FT_Load_Glyph( _face, glyph_index, FT_LOAD_NO_SCALE );
             debug << "\nLoad Glyph into Face's glyph slot. error code: " << _error;
             _slot = _face->glyph;
             _outline = _slot->outline;
-            
+
             char glyph_name[1024];
             FT_Get_Glyph_Name( _face, glyph_index, glyph_name, 1024 );
             _gm = _slot->metrics;
@@ -172,27 +172,27 @@ namespace LatexDrawGraphics {
             << " Height: " << _gm.height
             << " Hor. Advance: " << _gm.horiAdvance
             << " Vert. Advance: " << _gm.vertAdvance;
-            
+
             // Print outline details, taken from the glyph in the slot.
             debug << "\nNum points: " << _outline.n_points;
             debug << "\nNum contours: " << _outline.n_contours;
             debug << "\nContour endpoint index values:";
             for ( int i = 0 ; i < _outline.n_contours ; i++ ) debug << " " << _outline.contours[i];
             debug << "\n-->\n";
-            
+
             // Invert y coordinates (SVG = neg at top, TType = neg at bottom)
             _points = _outline.points;
             for ( int i = 0 ; i < _outline.n_points ; i++ )
                 _points[i].y *= -1;
-            
+
             _bbheight = _face->bbox.yMax - _face->bbox.yMin;
             _bbwidth = _face->bbox.xMax - _face->bbox.xMin;
             _tags = _outline.tags;
             _contours = _outline.contours;
             std::cout << debug.str();
         }
-        
-        
+
+
         // Create Header
         std::string svgheader() {
             std::stringstream tmp;
@@ -200,21 +200,21 @@ namespace LatexDrawGraphics {
             tmp << "\n<svg width='" << _bbwidth << "px'"
             << " height='" << _bbheight << "px'"
             << " xmlns='http://www.w3.org/2000/svg' version='1.1'>";
-            
+
             return tmp.str();
         }
-        
+
         // Draw Border
         std::string svgborder()  {
             std::stringstream tmp;
-            
+
             tmp << "\n <rect fill='none' stroke='black'"
             << " width='" << _bbwidth - 1 << "'"
             << " height='" << _bbheight - 1 << "'/>";
             return tmp.str();
         }
-        
-        
+
+
         std::string svgtransform() {
             // TrueType points are not in the range usually visible by SVG.
             // they often have negative numbers etc. So.. here we
@@ -225,13 +225,13 @@ namespace LatexDrawGraphics {
             std::stringstream tmp("");
             long yadj = _gm.horiBearingY + _gm.vertBearingY + 100;
             long xadj = 100;
-            
+
             tmp << "\n <g fill-rule='nonzero' "
             << " transform='translate(" << xadj << " " << yadj << ")'"
             << ">";
             return tmp.str();
         }
-        
+
         // Add Axis
         std::string axes()
         {
@@ -245,7 +245,7 @@ namespace LatexDrawGraphics {
             << " '/>";
             return tmp.str();
         }
-        
+
         // Draw Bearing + Advance Box
         std::string typography_box()
         {
@@ -255,7 +255,7 @@ namespace LatexDrawGraphics {
             long x2 =   _gm.horiAdvance;
             long y1 = - _gm.vertBearingY - _gm.height;
             long y2 = y1 + _gm.vertAdvance;
-            
+
             tmp << "\n <path stroke='blue' fill='none' stroke-dasharray='10,16' d='"
             << " M" << x1 << "," << y1
             << " M" << x1 << "," << y2
@@ -263,11 +263,11 @@ namespace LatexDrawGraphics {
             << " L" << x2 << "," << y1
             << " L" << x1 << "," << y1
             << " '/>";
-            
+
             return tmp.str();
         }
-        
-        
+
+
         // Draw points as circles
         std::string points()
         {
@@ -282,7 +282,7 @@ namespace LatexDrawGraphics {
                 long ny = _points[(i+1) % _outline.n_points].y;
                 int radius = 5;
                 if ( i == 0 ) radius = 10;
-                
+
                 std::string color;
                 if (this_is_ctrl_pt) color = "none"; else color = "blue";
                 if (this_is_ctrl_pt && next_is_ctrl_pt) {
@@ -302,10 +302,10 @@ namespace LatexDrawGraphics {
                 << " r='" << radius << "'"
                 << "/>";
             }
-            
+
             return tmp.str();
         }
-        
+
 
         // Draw straight lines between points
         std::string pointlines()
@@ -314,7 +314,7 @@ namespace LatexDrawGraphics {
             tmp << "\n  <path fill='none' stroke='green' d='";
             tmp << "\n   M " << _points[0].x << "," << _points[0].y << "\n";
             tmp << "\n  '/>";
-            
+
             for ( int i = 0 ; i < _outline.n_points-1 ; i++ ) {
                 std::string dash_mod("");
                 for (int j = 0 ; j < _outline.n_contours; j++ ) {
@@ -330,7 +330,7 @@ namespace LatexDrawGraphics {
             }
             return tmp.str();
         }
-        
+
         // Label points
         std::string labelpts()
         {
@@ -347,8 +347,8 @@ namespace LatexDrawGraphics {
             }
             return tmp.str();
         }
-        
-        
+
+
         /* Draw the outline of the font as svg.
          There are three main components.
          1. the points
@@ -359,60 +359,60 @@ namespace LatexDrawGraphics {
         {
             if (_outline.n_points==0) return "<!-- font had 0 points -->";
             if (_outline.n_contours==0) return "<!-- font had 0 contours -->";
-           
+
             std::stringstream svg;
-            
+
             svg << "d='";
-            
+
             /* tag bit 1 indicates whether its a control point on a bez curve
              or not. two consecutive control points imply another point halfway
              between them */
-            
+
             // Step 1. move to starting point (M x-coord y-coord )
             // Step 2. decide whether to draw a line or a bezier curve or to move
             // Step 3. for bezier: Q control-point-x control-point-y,
             //		         destination-x, destination-y
             //         for line:   L x-coord, y-coord
             //         for move:   M x-coord, y-coord
-            
+
             int contour_starti = 0;
-            
+
             // Create a local copy of pointers
             FT_Outline outline = _outline;
             FT_Vector* points = _points;
             char* tags = _tags;
             short* contours = _contours;
-            
-            
+
+
             for (int i = 0 ; i < outline.n_contours ; i++ )
             {
                 int contour_endi = contours[i];
-                
+
                 int offset = contour_starti;
                 int npts = contour_endi - contour_starti + 1;
-                
+
 
                 svg << "M" << points[contour_starti].x << "," << - points[contour_starti].y;
-               
+
                 char mode='M';
                 for ( int j = 0; j < npts; j++ )
                 {
                     int a = j%npts + offset;
                     int nexti = (j+1)%npts + offset;
                     int nextnexti = (j+2)%npts + offset;
-                    
+
                     long x =   points[a].x;
                     long y = - points[a].y;
                     long nx =  points[nexti].x;
                     long ny = - points[nexti].y;
-                    
+
                     bool this_tagbit1 = (tags[a] & 1);
                     bool next_tagbit1 = (tags[nexti] & 1);
                     bool nextnext_tagbit1 = (tags[ nextnexti ] & 1);
                     bool this_isctl = !this_tagbit1;
                     bool next_isctl = !next_tagbit1;
                     bool nextnext_isctl = !nextnext_tagbit1;
-                    
+
                     if (this_isctl && next_isctl)
                     {
                         // two adjacent ctl pts. adding point halfway between;
@@ -420,7 +420,7 @@ namespace LatexDrawGraphics {
                         x = (x + nx) / 2;
                         y = (y + ny) / 2;
                         this_isctl = false;
- 
+
                         //  Check if first pt in contour was a ctrl pt. moving to non-ctrl pt
                         if(j==0)
                         {
@@ -429,7 +429,7 @@ namespace LatexDrawGraphics {
                             mode='M';
                         }
                     }
-                    
+
                     if (!this_isctl && next_isctl)
                     {
                         long nnx = points[nextnexti].x;
@@ -458,7 +458,7 @@ namespace LatexDrawGraphics {
                         // this is ctrl pt. skipping to
                     }
                 }
-                
+
                 contour_starti = contour_endi+1;
                 svg << "Z";
                 mode='Z';
@@ -467,14 +467,14 @@ namespace LatexDrawGraphics {
             svg << "'";
             return svg.str();
         }
-        
-        
+
+
         std::string svgfooter()
         {
             return "\n </g>\n</svg>\n";
         }
     };
-    
+
 } // namespace
 
 #endif
