@@ -10,7 +10,8 @@ int main( int argc, char * argv[] )
 	}
 
 	font2svg::glyph g( argv[1], argv[2] );
-	std::cout << g.svgheader() << g.svgtransform() << g.outline() << g.svgfooter();
+	// std::cout << g.svgheader() << g.svgtransform() << g.outline() << g.svgfooter();
+	std::cout << g.svgheader() << g.svgborder() << g.svgtransform() << g.points() << g.typography_box() << g.outline() << g.svgfooter();
 	g.free();
 
   return 0;
