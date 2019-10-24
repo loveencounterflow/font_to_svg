@@ -83,26 +83,26 @@ public:
 
 		// Load a typeface
 		error = FT_New_Face( library, filename.c_str(), 0, &face );
-		debug << "\nFace load error code: " << error;
-		debug << "\nfont filename: " << filename;
+		debug << "\n^6734-1^Face load error code: " << error;
+		debug << "\n^6734-2^font filename: " << filename;
 		if (error) {
 			std::cerr << "problem loading file " << filename << "\n";
 			exit(1);
 		}
-		debug << "\nFamily Name: " << face->family_name;
-		debug << "\nStyle Name: " << face->style_name;
-		debug << "\nNumber of faces: " << face->num_faces;
-		debug << "\nNumber of glyphs: " << face->num_glyphs;
+		debug << "\n^6734-3^Family Name: " << face->family_name;
+		debug << "\n^6734-4^Style Name: " << face->style_name;
+		debug << "\n^6734-5^Number of faces: " << face->num_faces;
+		debug << "\n^6734-6^Number of glyphs: " << face->num_glyphs;
 	}
 
 	void free()
 	{
-		debug << "\n<!--";
+		debug << "\n^6734-7^<!--";
 		error = FT_Done_Face( face );
-		debug << "\nFree face. error code: " << error;
+		debug << "\n^6734-8^Free face. error code: " << error;
 		error = FT_Done_FreeType( library );
-		debug << "\nFree library. error code: " << error;
-		debug << "\n-->\n";
+		debug << "\n^6734-9^Free library. error code: " << error;
+		debug << "\n^6734-10^-->\n";
 	}
 
 };
@@ -117,12 +117,12 @@ There are three main components.
 std::string do_outline(std::vector<FT_Vector> points, std::vector<char> tags, std::vector<short> contours)
 {
 	std::stringstream debug, svg;
-	std::cout << "<!-- do outline -->\n";
+	// std::cout << "<!--^379879576^ do outline -->\n";
 	if (points.size()==0) return "<!-- font had 0 points -->";
 	if (contours.size()==0) return "<!-- font had 0 contours -->";
 	svg.str("");
-	svg << "\n\n  <!-- draw actual outline using lines and Bezier curves-->";
-	svg	<< "\n  <path fill='black' stroke='black'"
+	// svg << "\n\n  <!-- draw actual outline using lines and Bezier curves-->";
+	svg	<< "<path fill='black' stroke='black'"
 		<< " fill-opacity='0.45' "
 		<< " stroke-width='2' "
 		<< " d='";
@@ -142,14 +142,14 @@ std::string do_outline(std::vector<FT_Vector> points, std::vector<char> tags, st
 	int contour_endi = 0;
 	for ( int i = 0 ; i < contours.size() ; i++ ) {
 		contour_endi = contours.at(i);
-		debug << "new contour starting. startpt index, endpt index:";
-		debug << contour_starti << "," << contour_endi << "\n";
+		// debug << "^89345^new contour starting. startpt index, endpt index:";
+		// debug << contour_starti << "," << contour_endi << "\n";
 		int offset = contour_starti;
 		int npts = contour_endi - contour_starti + 1;
-		debug << "number of points in this contour: " << npts << "\n";
-		debug << "moving to first pt " << points[offset].x << "," << points[offset].y << "\n";
-		svg << "\n M " << points[contour_starti].x << "," << points[contour_starti].y << "\n";
-		debug << "listing pts: [this pt index][isctrl] <next pt index><isctrl> [x,y] <nx,ny>\n";
+		// debug << "^974385^number of points in this contour: " << npts << "\n";
+		// debug << "^974385^moving to first pt " << points[offset].x << "," << points[offset].y << "\n";
+		svg << " M " << points[contour_starti].x << "," << points[contour_starti].y << "\n";
+		// debug << "^83842^listing pts: [this pt index][isctrl] <next pt index><isctrl> [x,y] <nx,ny>\n";
 		for ( int j = 0; j < npts; j++ ) {
 			int thisi = j%npts + offset;
 			int nexti = (j+1)%npts + offset;
@@ -166,52 +166,52 @@ std::string do_outline(std::vector<FT_Vector> points, std::vector<char> tags, st
 			bool this_isctl = !this_tagbit1;
 			bool next_isctl = !next_tagbit1;
 			bool nextnext_isctl = !nextnext_tagbit1;
-			debug << " [" << thisi << "]";
-			debug << "[" << !this_tagbit1 << "]";
-			debug << " <" << nexti << ">";
-			debug << "<" << !next_tagbit1 << ">";
-			debug << " <<" << nextnexti << ">>";
-			debug << "<<" << !nextnext_tagbit1 << ">>";
-			debug << " [" << x << "," << y << "]";
-			debug << " <" << nx << "," << ny << ">";
-			debug << " <<" << nnx << "," << nny << ">>";
-			debug << "\n";
+			// debug << " [" << thisi << "]";
+			// debug << "[" << !this_tagbit1 << "]";
+			// debug << " <" << nexti << ">";
+			// debug << "<" << !next_tagbit1 << ">";
+			// debug << " <<" << nextnexti << ">>";
+			// debug << "<<" << !nextnext_tagbit1 << ">>";
+			// debug << " [" << x << "," << y << "]";
+			// debug << " <" << nx << "," << ny << ">";
+			// debug << " <<" << nnx << "," << nny << ">>";
+			// debug << "\n^6734-11^";
 
 			if (this_isctl && next_isctl) {
-				debug << " two adjacent ctl pts. adding point halfway between " << thisi << " and " << nexti << ":";
-				debug << " reseting x and y to ";
+				// debug << " two adjacent ctl pts. adding point halfway between " << thisi << " and " << nexti << ":";
+				// debug << " reseting x and y to ";
 				x = (x + nx) / 2;
 				y = (y + ny) / 2;
 				this_isctl = false;
-				debug << " [" << x << "," << y <<"]\n";
+				// debug << " [" << x << "," << y <<"]\n";
 				if (j==0) {
-					debug << "first pt in contour was ctrl pt. moving to non-ctrl pt\n";
-					svg << " M " << x << "," << y << "\n";
+					// debug << "first pt in contour was ctrl pt. moving to non-ctrl pt\n";
+					svg << " M " << x << "," << y << " ";
 				}
 			}
 
 			if (!this_isctl && next_isctl && !nextnext_isctl) {
 				svg << " Q " << nx << "," << ny << " " << nnx << "," << nny << "\n";
-				debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
+				// debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
 			} else if (!this_isctl && next_isctl && nextnext_isctl) {
-				debug << " two ctl pts coming. adding point halfway between " << nexti << " and " << nextnexti << ":";
-				debug << " reseting nnx and nny to halfway pt";
+				// debug << " two ctl pts coming. adding point halfway between " << nexti << " and " << nextnexti << ":";
+				// debug << " reseting nnx and nny to halfway pt";
 				nnx = (nx + nnx) / 2;
 				nny = (ny + nny) / 2;
 				svg << " Q " << nx << "," << ny << " " << nnx << "," << nny << "\n";
-				debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
+				// debug << " bezier to " << nnx << "," << nny << " ctlx, ctly: " << nx << "," << ny << "\n";
 			} else if (!this_isctl && !next_isctl) {
 				svg << " L " << nx << "," << ny << "\n";
-				debug << " line to " << nx << "," << ny << "\n";			
+				// debug << " line to " << nx << "," << ny << "\n";
 			} else if (this_isctl && !next_isctl) {
-				debug << " this is ctrl pt. skipping to " << nx << "," << ny << "\n";
+				// debug << " this is ctrl pt. skipping to " << nx << "," << ny << "\n";
 			}
 		}
 		contour_starti = contour_endi+1;
-		svg << " Z\n";
+		svg << " Z ";
 	}
-	svg << "\n  '/>";
-	std::cout << "\n<!--\n" << debug.str() << " \n-->\n";
+	svg << "'/>";
+	// std::cout << "\n<!--\n^38767534^" << debug.str() << " \n-->\n";
 	return svg.str();
 }
 
@@ -262,29 +262,29 @@ public:
 		codepoint = strtol( unicode_s.c_str() , NULL, 0 );
 		// Load the Glyph into the face's Glyph Slot + print details
 		FT_UInt glyph_index = FT_Get_Char_Index( face, codepoint );
-		debug << "<!--\nUnicode requested: " << unicode_s;
-		debug << " (decimal: " << codepoint << " hex: 0x"
-			<< std::hex << codepoint << std::dec << ")";
-		debug << "\nGlyph index for unicode: " << glyph_index;
+		// debug << "<!--\n^343423^Unicode requested: " << unicode_s;
+		// debug << " (decimal: " << codepoint << " hex: 0x"
+		// 	<< std::hex << codepoint << std::dec << ")";
+		// debug << "\n^6734-12^Glyph index for unicode: " << glyph_index;
 		error = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
-		debug << "\nLoad Glyph into Face's glyph slot. error code: " << error;
+		// debug << "\n^6734-13^Load Glyph into Face's glyph slot. error code: " << error;
 		slot = face->glyph;
 		ftoutline = slot->outline;
 		char glyph_name[1024];
 		FT_Get_Glyph_Name( face, glyph_index, glyph_name, 1024 );
 		gm = slot->metrics;
-		debug << "\nGlyph Name: " << glyph_name;
-		debug << "\nGlyph Width: " << gm.width
-			<< " Height: " << gm.height
-			<< " Hor. Advance: " << gm.horiAdvance
-			<< " Vert. Advance: " << gm.vertAdvance;
+		// debug << "\n^6734-14^Glyph Name: " << glyph_name;
+		// debug << "\n^6734-15^Glyph Width: " << gm.width
+		// 	<< " Height: " << gm.height
+		// 	<< " Hor. Advance: " << gm.horiAdvance
+		// 	<< " Vert. Advance: " << gm.vertAdvance;
 
 		// Print outline details, taken from the glyph in the slot.
-		debug << "\nNum points: " << ftoutline.n_points;
-		debug << "\nNum contours: " << ftoutline.n_contours;
-		debug << "\nContour endpoint index values:";
-		for ( int i = 0 ; i < ftoutline.n_contours ; i++ ) debug << " " << ftoutline.contours[i];
-		debug << "\n-->\n";
+		// debug << "\n^6734-16^Num points: " << ftoutline.n_points;
+		// debug << "\n^6734-17^Num contours: " << ftoutline.n_contours;
+		// debug << "\n^6734-18^Contour endpoint index values:";
+		// for ( int i = 0 ; i < ftoutline.n_contours ; i++ ) debug << " " << ftoutline.contours[i];
+		// debug << "\n^6734-19^-->\n";
 
 		// Invert y coordinates (SVG = neg at top, TType = neg at bottom)
 		ftpoints = ftoutline.points;
@@ -301,7 +301,8 @@ public:
 	std::string svgheader() {
 		tmp.str("");
 
-		tmp << "\n<svg width='" << bbwidth << "px'"
+		tmp << "<?xml version='1.0' standalone='no'?>"
+		  << "\n<svg width='" << bbwidth << "px'"
 			<< " height='" << bbheight << "px'"
 			<< " xmlns='http://www.w3.org/2000/svg' version='1.1'>";
 
@@ -310,9 +311,9 @@ public:
 
 	std::string svgborder()  {
 		tmp.str("");
-		tmp << "\n\n <!-- draw border -->";
+		// tmp << "\n\n <!-- draw border -->";
 
-		tmp << "\n <rect fill='none' stroke='black'"
+		tmp << "\n <rect fill='none' stroke='red' strokewidth='10px'"
 			<< " width='" << bbwidth - 1 << "'"
 			<< " height='" << bbheight - 1 << "'/>";
 		return tmp.str();
@@ -326,7 +327,7 @@ public:
 		// note also that y coords of all points have been flipped during
 		// init() so that SVG Y positive = Truetype Y positive
 		tmp.str("");
-		tmp << "\n\n <!-- make sure glyph is visible within svg window -->";
+		// tmp << "\n\n <!-- make sure glyph is visible within svg window -->";
 		int yadj = gm.horiBearingY + gm.vertBearingY + 100;
 		int xadj = 100;
 		tmp << "\n <g fill-rule='nonzero' "
@@ -337,7 +338,7 @@ public:
 
 	std::string axes()  {
 		tmp.str("");
-		tmp << "\n\n  <!-- draw axes --> ";
+		// tmp << "\n\n  <!-- draw axes --> ";
 		tmp << "\n <path stroke='blue' stroke-dasharray='5,5' d='"
 			<< " M" << -bbwidth << "," << 0
 			<< " L" <<  bbwidth << "," << 0
@@ -349,12 +350,12 @@ public:
 
 	std::string typography_box()  {
 		tmp.str("");
-		tmp << "\n\n  <!-- draw bearing + advance box --> ";
+		// tmp << "\n\n  <!-- draw bearing + advance box --> ";
 		int x1 = 0;
 		int x2 = gm.horiAdvance;
 		int y1 = -gm.vertBearingY-gm.height;
 		int y2 = y1 + gm.vertAdvance;
-		tmp << "\n <path stroke='blue' fill='none' stroke-dasharray='10,16' d='"
+		tmp << "\n <path stroke='blue' fill='none' stroke-dasharray='1,1' d='"
 			<< " M" << x1 << "," << y1
 			<< " M" << x1 << "," << y2
 			<< " L" << x2 << "," << y2
@@ -367,7 +368,7 @@ public:
 
 	std::string points()  {
 		tmp.str("");
-		tmp << "\n\n  <!-- draw points as circles -->";
+		// tmp << "\n\n  <!-- draw points as circles -->";
 		for ( int i = 0 ; i < ftoutline.n_points ; i++ ) {
 			bool this_is_ctrl_pt = !(tags[i] & 1);
 			bool next_is_ctrl_pt = !(tags[(i+1)%ftoutline.n_points] & 1);
@@ -380,7 +381,7 @@ public:
 			std::string color;
 			if (this_is_ctrl_pt) color = "none"; else color = "blue";
 			if (this_is_ctrl_pt && next_is_ctrl_pt) {
-				tmp << "\n  <!-- halfway pt between 2 ctrl pts -->";
+				// tmp << "\n  <!-- halfway pt between 2 ctrl pts -->";
 				tmp << "<circle"
 				  << " fill='" << "blue" << "'"
 				  << " stroke='black'"
@@ -388,7 +389,7 @@ public:
 				  << " r='" << 2 << "'"
 				  << "/>";
 			};
-			tmp << "\n  <!--" << i << "-->";
+			// tmp << "\n  <!--" << i << "-->";
 			tmp << "<circle"
 				<< " fill='" << color << "'"
 				<< " stroke='black'"
@@ -402,7 +403,7 @@ public:
 
 	std::string pointlines()  {
 		tmp.str("");
-		tmp << "\n\n  <!-- draw straight lines between points -->";
+		// tmp << "\n\n  <!-- draw straight lines between points -->";
 		tmp << "\n  <path fill='none' stroke='green' d='";
 		tmp << "\n   M " << ftpoints[0].x << "," << ftpoints[0].y << "\n";
 		tmp << "\n  '/>";
@@ -446,7 +447,7 @@ public:
 
 	std::string svgfooter()  {
 		tmp.str("");
-		tmp << "\n </g>\n</svg>\n";
+		tmp << "</g></svg>";
 		return tmp.str();
 	}
 };
